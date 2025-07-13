@@ -1,189 +1,121 @@
 (these two scripts work pretty much like Gekko did for me, this should work on a RPI4/3)
 
-Kraken RSI Trading Bot with Web Dashboard
+Super Simple RSI Trading Bot for Kraken
 
-This project implements a simple yet effective cryptocurrency trading bot for the Kraken exchange, primarily utilizing the Relative Strength Index (RSI) for trade signals. It features both paper trading and live trading capabilities, and importantly, includes a basic Flask web dashboard for real-time monitoring of balances, recent trades, and bot status.
-Project Overview
-
-The bot's core logic revolves around the RSI indicator:
-
-    RSI-Based Strategy: Buys when RSI is oversold and sells when RSI is overbought.
-
-    Real-time Monitoring: A Flask web application provides a simple dashboard to view current balances, PnL, and recent trade history.
-
-    Configurable Trading: Easily adjust RSI thresholds, trade amounts, and switch between paper and live trading modes.
-
-    Order Management: Includes logic to check for and cancel stale orders to prevent hanging trades in live mode.
-
+A straightforward Python-based RSI (Relative Strength Index) trading bot designed for the Kraken exchange. This bot features a web-based dashboard for monitoring and basic controls, and supports both live and paper trading.
 Features
 
-    RSI Trading Strategy: Implements a classic RSI oversold/overbought trading strategy.
+   RSI-based Trading: Automatically buys when RSI is low and sells when RSI is high.
+   
+   Kraken Integration: Built using the ccxt library for reliable interaction with Kraken.
+   
+   Web Dashboard: A simple Flask-based web interface to view current balances, recent trades, PNL, and trading status.
+   
+   Paper Trading Mode: Test your strategies without risking real funds.
+   
+   Configurable Parameters: Easily adjust RSI period, buy/sell thresholds, and other trading parameters.
+   
+   Order Timeout: Automatically cancels stale orders to prevent hanging trades (i made this so it wouldnt get stuck on a order).
+   
+   Profit Protection: Includes logic to ensure sell orders are placed at a price sufficiently higher than the last buy to cover fees and ensure profit (i typically trade with 95 to 90%% of funds to cover costs).
 
-    Flask Web Dashboard: Provides a user-friendly web interface to monitor:
+Installation
 
-        Current USDT and Crypto balances.
+To get started with the bot, follow these steps:
 
-        Profit & Loss (PNL) in USDT and percentage.
+    Clone the repository:
 
-        Total fees paid.
+    git clone https://github.com/DrBlackross/super-simple-rsi.git
+    cd super-simple-rsi
 
-        Bot status (Active/Paused).
+    Create a virtual environment (recommended):
 
-        Recent trade history (last 10 trades).
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 
-        Controls to pause/resume trading and set order timeout.
+Install dependencies:
+ First, create a requirements.txt file with the following content:
 
-    Paper Trading Mode: Test the bot's performance with simulated funds without risking real capital.
+    ccxt==4.2.77
+    pandas==2.1.4
+    Flask==3.0.2
+    python-dotenv==1.0.0
 
-    Live Trading Mode: Execute actual trades on the Kraken exchange (requires secure API key configuration).
+Then, install them using pip:
 
-    Configurable Parameters: Easily adjust RSI period, overbought/oversold thresholds, trade percentages, minimum trade amounts, and order timeout.
+    pip install -r requirements.txt
 
-    Stale Order Cancellation: Automatically cancels limit orders that remain open for too long, preventing issues with unfulfilled orders.
+Configuration
 
-    Comprehensive Logging: Logs all significant actions and errors to a file (rsi_trading-kraken.log) and the console.
+Kraken API Keys:
+    Obtain your API Key and Secret from your Kraken account.
+    IMPORTANT: For security, it's highly recommended to set up API key permissions to only allow "Query Funds" and "Place & Cancel Orders
 
-Getting Started
+CoinBases API Keys (there weird):
+    It should look like this
 
-Follow these steps to set up and run the Kraken RSI Trading Bot.
-Prerequisites
+        trader = RSITrader('organizations/COINBASE_KEY_SHOULD_BE_LIKE_THIS/apiKeys/AND_THE_REST_OF_THE_KEY', '-----BEGIN EC PRIVATE KEY-----\FUN_PART_OF_COINBASE_NIGHTMARE_API_SECRET\n-----END EC PRIVATE KEY-----\n', 'DOGE', paper_trading=True)
 
-    Python 3.8+ installed on your system.
+Update SSRsi-Kraken.py:
+    Open SSRsi-Kraken.py and replace 'API_KRAKEN_KEY_HERE' and 'API_KRAKEN_SECRET_HERE' with your actual Kraken API Key and Secret.
 
-    A Kraken API account (for live trading, generate API keys with Fund and Trade permissions).
+    trader = RSITrader('YOUR_KRAKEN_API_KEY', 'YOUR_KRAKEN_SECRET_KEY', 'DOGE', paper_trading=False
 
-    An active internet connection to fetch historical and live market data from Kraken.
+Paper Trading:
+    To enable paper trading, change paper_trading=False to paper_trading=True in the RSITrader initialization:
 
-    A web browser to access the dashboard.
+    trader = RSITrader('YOUR_KRAKEN_API_KEY', 'YOUR_KRAKEN_SECRET_KEY', 'DOGE', paper_trading=True)
 
-1. Clone the Repository
+Crypto Symbol:
+    You can change the cryptocurrency symbol (e.g., from DOGE to BTC or ETH) by modifying the crypto_symbol argument:
 
-First, clone this GitHub repository to your local machine:
+    trader = RSITrader('YOUR_KRAKEN_API_KEY', 'YOUR_KRAKEN_SECRET_KEY', 'BTC', paper_trading=False
 
-git clone [https://github.com/DrBlackross/super-simple-rsi.git](https://github.com/DrBlackross/super-simple-rsi.git) ; cd super-simple-rsi
+Trading Parameters:
+    Adjust trading parameters within the RSITrader class in SSRsi-Kraken.py to suit your strategy (check by adding the 'indicators' on the kraken market chart):
 
-2. Set Up a Python Virtual Environment
+        self.rsi_period
+        self.rsi_low
+        self.rsi_high
+        self.interval
+        self.maker_fee
+        self.taker_fee
+        self.price_adjustment
+        self.min_usdt_trade
+        self.min_crypto_trade
+        self.position_percentage
+        self.min_usdt_profit_target_per_trade
+        self.max_usdt_loss_percent
+        self.order_timeout_minutes
 
-It is highly recommended to use a Python virtual environment to manage project dependencies and avoid conflicts with your system's Python installation.
-For Linux/macOS:
+Running the Bot
 
-python3 -m venv venv
-source venv/bin/activate
-
-For Windows (Command Prompt):
-
-python -m venv venv
-venv\Scripts\activate.bat
-
-For Windows (PowerShell):
-
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-3. Install Dependencies
-
-Once your virtual environment is activated, install the required packages using the requirements.txt file. Make sure this file is in your project's root directory.
-
-pip install -r requirements.txt
-
-This command will install all necessary libraries, including ccxt, pandas, and Flask.
-4. Configure API Keys (for Live Trading)
-
-If you intend to use live trading (paper_trading=False), you must set your Kraken API Key and Secret. The SSRsi-Kraken.py script currently has placeholder API keys:
-
-trader = RSITrader('API_KRAKEN_KEY_HERE', 'API_KRAKEN_SECRET_HERE', 'DOGE', paper_trading=False)
-
-Important: Replace 'API_KRAKEN_KEY_HERE' and 'API_KRAKEN_SECRET_HERE' with your actual Kraken API key and secret.
-
-Alternatively, for better security, you can modify the script to read these from environment variables, similar to your kraken-trans-bot.py script:
-
-import os
-# ... other imports ...
-
-KRAKEN_API_KEY = os.getenv('KRAKEN_API_KEY')
-KRAKEN_API_SECRET = os.getenv('KRAKEN_API_SECRET')
-
-# ... later in the script ...
-trader = RSITrader(KRAKEN_API_KEY, KRAKEN_API_SECRET, 'DOGE', paper_trading=False)
-
-If you choose the environment variable method, follow these steps to set them:
-For Linux/macOS (add to your ~/.bashrc, ~/.zshrc, or equivalent):
-
-export KRAKEN_API_KEY="YOUR_KRAKEN_API_KEY"
-export KRAKEN_API_SECRET="YOUR_KRAKEN_API_SECRET"
-
-After adding these, either run source ~/.bashrc (or your respective file) or open a new terminal session for the changes to take effect.
-For Windows (Command Prompt - temporary for the current session):
-
-set KRAKEN_API_KEY="YOUR_KRAKEN_API_KEY"
-set KRAKEN_API_SECRET="YOUR_KRAKEN_API_SECRET"
-
-For Windows (PowerShell - temporary for the current session):
-
-$env:KRAKEN_API_KEY="YOUR_KRAKEN_API_KEY"
-$env:KRAKEN_API_SECRET="YOUR_KRAKEN_API_SECRET"
-
-For persistent environment variables on Windows, you will need to add them via the System Properties -> Environment Variables dialog.
-5. Customize Bot Settings
-
-Open the SSRsi-Kraken.py file in your preferred code editor and review the RSITrader class's __init__ method for configurable parameters:
-
-    paper_trading: Set to True for paper trading (highly recommended for initial testing), or False for live trading.
-
-    crypto_symbol: Change 'DOGE' to your desired cryptocurrency (e.g., 'BTC', 'ETH', 'SOL'). Ensure the _get_kraken_symbol and _get_kraken_balance_code methods support your chosen symbol.
-
-    rsi_period: The period for RSI calculation (default: 3).
-
-    rsi_low: The RSI threshold for a BUY signal (default: 25).
-
-    rsi_high: The RSI threshold for a SELL signal (default: 85).
-
-    interval: Candlestick interval (default: '5m').
-
-    min_usdt_trade: Minimum trade size in USDT.
-
-    min_crypto_trade: Minimum crypto amount to trade.
-
-    position_percentage: Percentage of balance to use in a trade.
-
-    min_usdt_profit_target_per_trade: Minimum profit target per trade (in USDT) before selling.
-
-    max_usdt_loss_percent: Maximum percentage loss allowed before halting trading (if check_profit_condition is used).
-
-    current_usdt_balance, current_crypto_balance: Initial balances for paper trading.
-
-6. Run the Bot and Access the Dashboard
-
-With your virtual environment activated and settings configured, run the bot from your terminal:
+After configuration, run the script:
 
 python SSRsi-Kraken.py
 
-The script will start the Flask web server. You can then access the trading bot dashboard in your web browser by navigating to:
+The bot will start, and a web dashboard will be accessible at http://localhost:5000. The dashboard automatically refreshes every 120'ish seconds.
+Dashboard Controls
+    Account Balances: View your current USDT and crypto balances.
+    Performance: See your Profit and Loss (PNL) in USDT and percentage, and total fees paid.
+    Recent Trades: A table showing the last 10 executed trades.
 
-http://localhost:5000
+Logging
 
-The dashboard will automatically refresh every 10 seconds to show updated information.
-7. Understanding the Dashboard
+The bot logs its activities, including trades, balance updates, and errors, to rsi_trading-kraken.log. You can also monitor the console output for real-time updates.
+Important Notes
+    Risk Warning: Automated trading carries significant risks. Past performance is not indicative of future results. Use this bot at your own risk and only with funds you can afford to lose.
+    API Key Security: Never share your API keys. Store them securely and restrict their permissions on Kraken.
+    Network Stability: Ensure a stable internet connection for uninterrupted operation.
+    Error Handling: The bot includes basic error handling, but it's crucial to monitor its performance regularly.
+    Customization: This bot is a starting point. Feel free to modify and enhance it to fit your specific trading needs and strategies.
 
-The dashboard provides a quick overview of your bot's status and performance:
+Contributing
 
-    Account Balances: Shows your current USDT and cryptocurrency balances.
+Feel free to fork the repository, open issues, and submit pull requests if you have improvements or bug fixes.
+License
 
-    Performance: Displays your Profit & Loss (PNL) in both USDT and percentage, along with total fees paid.
-
-    Trading Controls:
-
-        Status: Indicates if trading is ACTIVE or PAUSED.
-
-        Pause/Resume Trading Button: Click to toggle the bot's trading activity.
-
-        Order Timeout: Shows the current timeout for open orders and allows you to set it to 15, 30, or 60 minutes.
-
-    Recent Trades: A table showing the last 10 executed trades, including time, type (BUY/SELL), and price.
-
-8. Log Files
-
-The bot logs its operations to rsi_trading-kraken.log in the project directory. This file is useful for detailed debugging and reviewing past actions.
+This project is open-source and available under the MIT License.
 
 (the usual yada-yada)
 Disclaimer
