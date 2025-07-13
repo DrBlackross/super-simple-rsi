@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSI Trading Dashboard - {{ crypto_symbol }}/USDT</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+    --bg-dark: #1e272e;
+    --panel-dark: #2c3840;
+    --text-primary: #d2dae2;
+    --text-secondary: #808e9b;
+    --accent-blue: #487eb0;
+    --accent-purple: #8c7ae6;
+    --positive: #00b894;
+    --negative: #d63031;
+    --border-color: #34495e;
+}
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--panel-dark);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 0 rgba(27, 31, 35, 0.1);
+        }
+
+        .chart-container {
+            height: 280px;
+            margin-bottom: 16px;
+            background: rgba(1, 4, 9, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .balance-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .balance-card {
+            background: rgba(22, 27, 34, 0.7);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .balance-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .balance-value {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .positive {
+            color: var(--positive);
+        }
+
+        .negative {
+            color: var(--negative);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.95em;
+        }
+
+        th {
+            background-color: rgba(22, 27, 34, 0.8);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background-color: rgba(110, 118, 129, 0.1);
+        }
+
+        .refresh-info {
+            text-align: right;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 0.9em;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        h2 {
+            color: var(--text-primary);
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .balance-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>RSI Trading Dashboard Kraken - {{ crypto_symbol }}/USDT</h1>
+
+    <div class="refresh-info">
+        Auto-refresh in <span id="countdown">180</span> seconds |
+        <span id="last-updated">Last updated: {{ timestamps[0] if timestamps else 'N/A' }}</span>
+    </div>
+
+    <div class="dashboard">
+        <div class="panel">
+            <h2>Market Charts</h2>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="rsiChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Account Overview</h2>
+            <div class="balance-container">
+                <div class="balance-card">
+                    <div class="balance-label">USDT Balance</div>
+                    <div class="balance-value">${{ last_usdt_balance }}</div>
+                </div>
+                <div class="balance-card">
+                    <div class="balance-label">{{ crypto_symbol }} Balance</div>
+                    <div class="balance-value">{{ last_crypto_balance }}</div>
+                </div>
+                <div class="balance-card">
+                    <div class="balance-label">PNL (USDT)</div>
+                    <div class="balance-value {{ 'positive' if pnl_usdt >= 0 else 'negative' }}">
+                        ${{ pnl_usdt }} <span class="{{ 'positive' if pnl_percent >= 0 else 'negative' }}">({{ pnl_percent }}%)</span>
+                    </div>
+                </div>
+                <div class="balance-card">
+                    <div class="balance-label">Total Fees</div>
+                    <div class="balance-value">${{ total_fees }}</div>
+                </div>
+            </div>
+
+            <div class="panel">
+    <h2>Recent Trades</h2>
+    {% if trading_data %}
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Price (USDT)</th>
+            </tr>
+            {% for trade in trading_data %}
+            <tr>
+                <td>{{ trade.time }}</td>
+                <td class="{{ trade.class }}">{{ trade.type }}</td>
+                <td>{{ trade.price }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No trades yet</p>
+    {% endif %}
+</div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer for auto-refresh
+        let timeLeft = 180;
+        const countdownElement = document.getElementById('countdown');
+        const lastUpdatedElement = document.getElementById('last-updated');
+
+        const countdownTimer = setInterval(() => {
+            timeLeft--;
+            countdownElement.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                window.location.reload();
+            }
+        }, 1000);
+
+        // Dark theme for charts
+        Chart.defaults.color = '#7d8590';
+        Chart.defaults.borderColor = 'rgba(240, 246, 252, 0.1)';
+
+        // Price Chart
+        const priceCtx = document.getElementById('priceChart').getContext('2d');
+        const priceChart = new Chart(priceCtx, {
+            type: 'line',
+            data: {
+                labels: {{ timestamps|tojson }},
+                datasets: [{
+                    label: 'Price (USDT)',
+                    data: {{ prices|tojson }},
+                    borderColor: '#58a6ff', // Set price line to vibrant blue
+                    backgroundColor: 'rgba(88, 166, 255, 0.05)',
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#58a6ff',
+                    pointRadius: 2,
+                    pointHoverRadius: 4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(240, 246, 252, 0.05)'
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(240, 246, 252, 0.05)'
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'var(--text-primary)',
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(22, 27, 34, 0.95)',
+                        titleColor: 'var(--text-primary)',
+                        bodyColor: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        borderWidth: 1,
+                        padding: 12,
+                        usePointStyle: true
+                    }
+                }
+            }
+        });
+
+        // RSI Chart
+        const rsiCtx = document.getElementById('rsiChart').getContext('2d');
+        const rsiChart = new Chart(rsiCtx, {
+            type: 'line',
+            data: {
+                labels: {{ timestamps|tojson }},
+                datasets: [{
+                    label: 'RSI',
+                    data: {{ rsi_values|tojson }},
+                    borderColor: '#ffff00', // Set RSI line to bright yellow
+                    backgroundColor: 'rgba(188, 140, 255, 0.05)',
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ffff00',
+                    pointRadius: 2,
+                    pointHoverRadius: 4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(240, 246, 252, 0.05)'
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)'
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(240, 246, 252, 0.05)'
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)',
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'var(--text-primary)',
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(22, 27, 34, 0.95)',
+                        titleColor: 'var(--text-primary)',
+                        bodyColor: 'var(--text-primary)',
+                        borderColor: 'var(--border-color)',
+                        borderWidth: 1,
+                        padding: 12,
+                        usePointStyle: true
+                    },
+                    annotation: {
+                        annotations: {
+                            overbought: {
+                                type: 'line',
+                                yMin: 70,
+                                yMax: 70,
+                                borderColor: 'var(--negative)',
+                                borderWidth: 1,
+                                borderDash: [6, 6],
+                                label: {
+                                    content: 'Overbought (70)',
+                                    enabled: true,
+                                    position: 'left',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--negative)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            oversold: {
+                                type: 'line',
+                                yMin: 30,
+                                yMax: 30,
+                                borderColor: 'var(--positive)',
+                                borderWidth: 1,
+                                borderDash: [6, 6],
+                                label: {
+                                    content: 'Oversold (30)',
+                                    enabled: true,
+                                    position: 'left',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--positive)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Periodically update data without full page reload
+        setInterval(() => {
+            fetch('/update_data')
+                .then(response => response.json())
+                .then(data => {
+                    // Update trades table
+                    const tbody = document.querySelector('tbody');
+                    tbody.innerHTML = data.trading_data.map(trade => `
+                        <tr>
+                            <td>${trade.timestamp}</td>
+                            <td><span class="${trade.type === 'sell' ? 'positive' : 'negative'}">${trade.type.toUpperCase()}</span></td>
+                            <td>${trade.price}</td>
+                        </tr>
+                    `).join('');
+
+                    // Update last updated time
+                    const now = new Date();
+                    lastUpdatedElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+                });
+        }, 30000); // Update every 30 seconds
+    </script>
+</body>
+</html>
