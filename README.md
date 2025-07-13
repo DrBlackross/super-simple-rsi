@@ -56,7 +56,9 @@ Update SSRsi-Kraken.py: Open SSRsi-Kraken.py and replace
 	'API_KRAKEN_KEY_HERE' and 'API_KRAKEN_SECRET_HERE' 
 with your actual Kraken API Key and Secret (or CoinBase)
 
-	trader = RSITrader('YOUR_KRAKEN_API_KEY', 'YOUR_KRAKEN_SECRET_KEY', 'DOGE', paper_trading=False
+Real Trading: To enable real trading, change paper_trading=True to paper_trading=False (see yada-yada at bottom of README) in the RSITrader initialization:
+
+	trader = RSITrader('YOUR_KRAKEN_API_KEY', 'YOUR_KRAKEN_SECRET_KEY', 'DOGE', paper_trading=False)
 
 Paper Trading: To enable paper trading, change paper_trading=False to paper_trading=True in the RSITrader initialization:
 
