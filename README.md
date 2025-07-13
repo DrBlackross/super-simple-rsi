@@ -1,4 +1,4 @@
-(these two scripts work pretty much like Gekko did for me)
+(these two scripts work pretty much like Gekko did for me, this should work on a RPI4/3)
 
 Kraken RSI Trading Bot with Web Dashboard
 
@@ -82,9 +82,9 @@ python -m venv venv
 
 3. Install Dependencies
 
-Once your virtual environment is activated, install the required packages using the requirements_x86.txt file. Make sure this file is in your project's root directory.
+Once your virtual environment is activated, install the required packages using the requirements.txt file. Make sure this file is in your project's root directory.
 
-pip install -r requirements_x86.txt
+pip install -r requirements.txt
 
 This command will install all necessary libraries, including ccxt, pandas, and Flask.
 4. Configure API Keys (for Live Trading)
