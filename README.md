@@ -1,3 +1,5 @@
+(these two scripts work pretty much like Gekko did for me)
+
 Kraken RSI Trading Bot with Web Dashboard
 
 This project implements a simple yet effective cryptocurrency trading bot for the Kraken exchange, primarily utilizing the Relative Strength Index (RSI) for trade signals. It features both paper trading and live trading capabilities, and importantly, includes a basic Flask web dashboard for real-time monitoring of balances, recent trades, and bot status.
@@ -58,8 +60,7 @@ Prerequisites
 
 First, clone this GitHub repository to your local machine:
 
-git clone https://github.com/your-username/your-repo-name.git # Replace with your actual repo name
-cd your-repo-name # Navigate to your project directory
+git clone [https://github.com/DrBlackross/super-simple-rsi.git](https://github.com/DrBlackross/super-simple-rsi.git) ; cd super-simple-rsi
 
 2. Set Up a Python Virtual Environment
 
@@ -183,6 +184,8 @@ The dashboard provides a quick overview of your bot's status and performance:
 8. Log Files
 
 The bot logs its operations to rsi_trading-kraken.log in the project directory. This file is useful for detailed debugging and reviewing past actions.
+
+(the usual yada-yada)
 Disclaimer
 
 Cryptocurrency trading carries substantial financial risk, including the potential for total loss of capital. This trading bot is provided for educational and experimental purposes only. It is not financial advice. Do not use this bot for live trading with funds you cannot afford to lose. Always thoroughly understand the code, test extensively in paper trading mode, and fully comprehend the risks involved before deploying any automated trading system with real money. The author assumes no responsibility for any financial losses incurred through the use of this software.
