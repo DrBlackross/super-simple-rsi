@@ -28,7 +28,7 @@ logging.getLogger().addFilter(NoRecursiveWarningsFilter())
 
 
 class RSITrader:
-    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=False):
+    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=True):
         self.paper_trading = paper_trading
         # Initialize Coinbase exchange
         self.exchange = ccxt.coinbase({
