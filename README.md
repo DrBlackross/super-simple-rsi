@@ -97,7 +97,7 @@ After configuration, run the script:
 
 	python SSRsi-Kraken.py
 
-The bot will start, and a web dashboard will be accessible at http://localhost:5000. The dashboard automatically refreshes every 120'ish seconds. Dashboard Controls Account Balances: View your current USDT and crypto balances. Performance: See your Profit and Loss (PNL) in USDT and percentage, and total fees paid. Recent Trades: A table showing the last 10 executed trades.
+The bot will start, and a web dashboard will be accessible at http://localhost:5000. The dashboard automatically refreshes every 180 seconds. Dashboard Controls Account Balances: View your current USDT and crypto balances. Performance: See your Profit and Loss (PNL) in USDT and percentage, and total fees paid. Recent Trades: A table showing the last 10 executed trades.
 
 There might be times where you will have to "intervene" and post a recovery trade, shouldn't happen but if it does.... Just Intervene!
 <img width="1315" height="633" alt="Screenshot from 2025-07-13 21-04-21" src="https://github.com/user-attachments/assets/40e73d68-4001-45de-9d80-1815a93c89b6" />
