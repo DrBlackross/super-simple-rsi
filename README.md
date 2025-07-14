@@ -108,7 +108,7 @@ There might be times where you will have to "intervene" and post a recovery trad
 
 The bot logs its activities, including trades, balance updates, and errors, to rsi_trading-kraken.log. You can also monitor the console output for real-time updates. Important Notes Risk Warning: Automated trading carries significant risks. Past performance is not indicative of future results. Use this bot at your own risk and only with funds you can afford to lose. API Key Security: Never share your API keys. Store them securely and restrict their permissions on Kraken. Network Stability: Ensure a stable internet connection for uninterrupted operation. Error Handling: The bot includes basic error handling, but it's crucial to monitor its performance regularly. Customization: This bot is a starting point. Feel free to modify and enhance it to fit your specific trading needs and strategies.
 
-To start a CLEAN trading session, just delete the logs and restart. It'll begin logging previous trades.
+To start a CLEAN trading session, just delete the logs and restart. IF NOT, it'll begin running with previous logged trades.
 
 # Contributing
 
