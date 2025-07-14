@@ -28,7 +28,7 @@ logging.getLogger().addFilter(NoRecursiveWarningsFilter())
 
 
 class RSITrader:
-    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=True):
+    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=False):
         self.paper_trading = paper_trading
         # Initialize Coinbase exchange
         self.exchange = ccxt.coinbase({
@@ -49,7 +49,7 @@ class RSITrader:
         self.trades = []
         self.log_file = 'rsi_trading-coinbase.log'
 
-        self.maker_fee = 0.0016 # Using Kraken's maker fee as a placeholder, adjust for Coinbase USDT pairs
+        self.maker_fee = 0.0016 # Using Kraken's maker fee as a placeholder, adjust for Coinbase USDT pairs (why not)
         self.taker_fee = 0.0026 # Using Kraken's taker fee as a placeholder, adjust for Coinbase USDT pairs
         self.price_adjustment = 0.004
 
@@ -67,7 +67,7 @@ class RSITrader:
 
         # Order timeout settings (NEW)
         self.order_timeout_minutes = 30
-        self.active_orders = {}  # Track active orders: {order_id: {'time': datetime, 'side': 'buy/sell'}}
+        self.active_orders = {}
 
         # Paper trading balances
         self.current_usdt_balance = 50.0
@@ -98,7 +98,7 @@ class RSITrader:
     def check_and_cancel_stale_orders(self):
         """Check for and cancel orders that have been open too long"""
         if self.paper_trading:
-            return  # No orders to cancel in paper trading mode
+            return
 
         current_time = datetime.now()
         orders_to_cancel = []
@@ -111,18 +111,15 @@ class RSITrader:
         # Cancel the stale orders
         for order_id in orders_to_cancel:
             try:
-                # Use self.coinbase_symbol instead of self.kraken_symbol
                 self.exchange.cancel_order(order_id, self.coinbase_symbol)
                 logging.info(f"Cancelled stale {self.active_orders[order_id]['side']} order: {order_id}")
                 del self.active_orders[order_id]
             except Exception as e:
                 logging.error(f"Failed to cancel order {order_id}: {e}")
-            # If we can't cancel it, we'll check again next cycle
 
     @staticmethod
     def _get_coinbase_symbol(symbol):
         # Coinbase uses 'BASE-QUOTE' format, and for USDT, it's typically 'USDT'
-        # On Coinbase Advanced/International, it might be DOGE-USDT
         coinbase_pairs = {
             'DOGE': 'DOGE-USDT',
             'BTC': 'BTC-USDT',
@@ -133,7 +130,7 @@ class RSITrader:
 
     @staticmethod
     def _get_coinbase_balance_code(symbol):
-        # Balance codes are usually the symbol itself, including USDT
+        # Balance codes are usually the symbol itself... including USDT
         coinbase_codes = {
             'DOGE': 'DOGE',
             'BTC': 'BTC',
@@ -199,7 +196,6 @@ class RSITrader:
     def fetch_current_price(self):
         for attempt in range(3):
             try:
-                # Use self.coinbase_symbol
                 ticker = self.exchange.fetch_ticker(self.coinbase_symbol)
                 return float(ticker['last']) if ticker and 'last' in ticker else None
             except Exception as e:
@@ -209,7 +205,6 @@ class RSITrader:
 
     def calculate_rsi(self):
         try:
-            # Use self.coinbase_symbol
             ohlcv = self.exchange.fetch_ohlcv(self.coinbase_symbol, self.interval, limit=100)
             if len(ohlcv) < self.rsi_period + 1:
                 return None
@@ -240,7 +235,6 @@ class RSITrader:
             # Also check for any filled orders and remove them from active_orders
             for order_id in list(self.active_orders.keys()):
                 try:
-                    # Use self.coinbase_symbol
                     order = self.exchange.fetch_order(order_id, self.coinbase_symbol)
                     if order['status'] == 'closed':
                         logging.info(f"Order {order_id} has been filled, removing from active orders")
@@ -269,7 +263,7 @@ class RSITrader:
                     f"Attempted buy: USDT to spend {usdt_to_spend_potential:.2f} is below minimum {self.min_usdt_trade:.2f} USDT. Skipping trade.")
                 return False
 
-            # Ensure we don't try to spend more USDT than we have (for real trading)
+            # Don't try to spend more USDT than we have (for real trading)
             usdt_to_spend = min(usdt_to_spend_potential,
                                 self.current_usdt_balance) if not self.paper_trading else usdt_to_spend_potential
             if usdt_to_spend < self.min_usdt_trade:
@@ -278,7 +272,7 @@ class RSITrader:
                 return False
 
             target_price = current_price * (1 - self.price_adjustment)
-            quantity = usdt_to_spend / target_price  # Crypto quantity to buy
+            quantity = usdt_to_spend / target_price
 
             if self.paper_trading:
                 fee = usdt_to_spend * self.taker_fee
@@ -295,7 +289,7 @@ class RSITrader:
                     f"Attempting REAL BUY: {quantity:.8f} {self.display_symbol} at limit price {target_price:.5f}")
                 try:
                     order = self.exchange.create_order(
-                        symbol=self.coinbase_symbol, # Use self.coinbase_symbol
+                        symbol=self.coinbase_symbol,
                         type='limit',
                         side='buy',
                         amount=quantity,
@@ -310,7 +304,7 @@ class RSITrader:
                         logging.info(
                             f"REAL BUY order placed: ID {order_id}, Quantity: {quantity:.8f} {self.display_symbol}, Price: {target_price:.5f}")
                     self.trades.append((pd.Timestamp.now(), target_price,
-                                        'buy'))  # Log attempt, actual fill price might vary or not fill
+                                        'buy'))
                     order_executed = True
                 except ccxt.InsufficientFunds as e:
                     logging.error(f"REAL BUY FAILED (Insufficient Funds): {e}")
@@ -328,7 +322,7 @@ class RSITrader:
                     f"Attempted sell: Crypto to sell {crypto_to_sell_potential:.8f} is below minimum {self.min_crypto_trade:.8f}. Skipping trade.")
                 return False
 
-            # Ensure we don't try to sell more crypto than we have
+            # Don't try to sell more crypto than we have
             quantity_to_sell = min(crypto_to_sell_potential,
                                    self.current_crypto_balance) if not self.paper_trading else crypto_to_sell_potential
             if quantity_to_sell < self.min_crypto_trade:
@@ -339,7 +333,6 @@ class RSITrader:
             target_price = current_price * (1 + self.price_adjustment)
             usdt_expected = quantity_to_sell * target_price
 
-            # --- NEW LOGIC: Check last buy price before selling ---
             last_buy_price = None
             for i in reversed(range(len(self.trades))):
                 if self.trades[i][2] == 'buy':
@@ -348,9 +341,7 @@ class RSITrader:
 
             if last_buy_price is not None:
                 # Add a small buffer to account for fees/slippage when checking for profit
-                # For example, ensure target_price is at least last_buy_price + (2 * taker_fee * last_buy_price)
-                # Or just a simple percentage buffer
-                profit_buffer = last_buy_price * (1 + self.taker_fee * 2)  # Example: cover round-trip fees
+                profit_buffer = last_buy_price * (1 + self.taker_fee * 2)
 
                 if target_price <= profit_buffer:
                     logging.info(
@@ -359,7 +350,6 @@ class RSITrader:
                         f"Skipping sell to avoid immediate loss or insufficient profit."
                     )
                     return False
-            # --- END NEW LOGIC ---
 
             if self.paper_trading:
                 fee = usdt_expected * self.taker_fee
@@ -377,7 +367,7 @@ class RSITrader:
                     f"Attempting REAL SELL: {quantity_to_sell:.8f} {self.display_symbol} at limit price {target_price:.5f}")
                 try:
                     order = self.exchange.create_order(
-                        symbol=self.coinbase_symbol, # Use self.coinbase_symbol
+                        symbol=self.coinbase_symbol,
                         type='limit',
                         side='sell',
                         amount=quantity_to_sell,
@@ -408,7 +398,7 @@ class RSITrader:
         while True:
             try:
                 self.update_balances()
-                self.check_and_cancel_stale_orders()  # NEW: Check for stale orders each cycle
+                self.check_and_cancel_stale_orders()
                 price = self.fetch_current_price()
                 rsi = self.calculate_rsi()
 
@@ -417,7 +407,7 @@ class RSITrader:
                     self.rsis.append(rsi)
                     self.timestamps.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-                    # Trim old data
+                    # Trim that old data
                     self.prices = self.prices[-self.max_data_points:]
                     self.rsis = self.rsis[-self.max_data_points:]
                     self.timestamps = self.timestamps[-self.max_data_points:]
@@ -446,7 +436,7 @@ app = Flask(__name__)
 app.static_folder = 'static'
 
 # Remember to replace 'YOUR_COINBASE_API_KEY' and 'YOUR_COINBASE_SECRET_KEY' with your actual keys
-trader = RSITrader('organizations/COINBASE_KEY_SHOULD_BE_LIKE_THIS/apiKeys/AND_THE_REST_OF_THE_KEY', '-----BEGIN EC PRIVATE KEY-----\FUN_PART_OF_COINBASE_NIGHTMARE_API_SECRET\n-----END EC PRIVATE KEY-----\n', 'DOGE', paper_trading=False)
+trader = RSITrader('organizations/COINBASE_KEY_SHOULD_BE_LIKE_THIS/apiKeys/AND_THE_REST_OF_THE_KEY', '-----BEGIN EC PRIVATE KEY-----\FUN_PART_OF_COINBASE_NIGHTMARE_API_SECRET\n-----END EC PRIVATE KEY-----\n', 'DOGE', paper_trading=True)
 
 
 @app.route('/')
