@@ -108,7 +108,7 @@ Then after 'intervening'
 
 But, looking at the script issuing its own BUY at 0.20419 USDT (which is fine)... after i posted a correction SELL just before, just means it will see the profit from anything after (like it did) and work from there with 'profit' being its main goal. 
 
-Also there might be a BullTrap coming up in the chart, which this script will not see, unlike the Ai trained model will ironically, because programming BullTrap detection has been a PITA on any script. But timing past a bulltrap is better that's why this script usually doesn't care about the trap because of the 15 or even 5 minute polling of the market and just skips past it... either way it will still work towards a 'profit' (IE. dont touch it), unless i or you stop the script and delete the log file and restart it, then all the previous trade data will be lost and start a new and, well, profit loss could happen. 
+Also there might be a BullTrap coming up in the chart, which this script will not see, unlike the Ai trained model will ironically, because programming BullTrap detection has been a PITA on any script. But timing past a bulltrap is better that's why this script usually doesn't care about the trap because of the 15 or even 5 minute polling of the market and just skips past it... either way it will still work towards a 'profit' (IE. dont touch it), unless i or you stop the script and delete the log file and restart it, then all the previous trade data will be lost and it will start a new and, well, profit loss could happen. 
 
 (a game of patience)
 
