@@ -28,8 +28,36 @@ logging.getLogger().addFilter(NoRecursiveWarningsFilter())
 
 
 class RSITrader:
-    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=True):
-        self.paper_trading = paper_trading
+    def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=False):
+        # ********** USER CONFIGURATION SECTION **********
+        self.paper_trading = paper_trading  # Set to True for testing, False for real trading
+        self.crypto_symbol = crypto_symbol  # Trading pair symbol (e.g., 'DOGE', 'BTC', 'ETH')
+
+        # RSI Parameters
+        self.rsi_period = 3  # Period for RSI calculation
+        self.rsi_low = 25  # Buy when RSI below this value
+        self.rsi_high = 85  # Sell when RSI above this value
+        self.interval = '5m'  # Timeframe for OHLCV data
+
+        # Trade Parameters
+        self.position_percentage = 97  # Percentage of balance to use per trade
+        self.price_adjustment = 0.004  # Price adjustment for limit orders (0.4%)
+
+        # Minimum trade amounts
+        self.min_usdt_trade = 5.0  # Minimum USDT amount per trade
+        self.min_crypto_trade = 15  # Minimum crypto amount per trade
+
+        # Risk Management
+        self.max_usdt_loss_percent = 90.0  # Max allowed loss percentage before stopping
+
+        # Exchange Fees (Kraken)
+        self.maker_fee = 0.0016  # 0.16%
+        self.taker_fee = 0.0026  # 0.26%
+
+        # Order Management
+        self.order_timeout_minutes = 30  # Cancel orders older than this
+        # ********** END USER CONFIGURATION **********
+
         self.exchange = ccxt.kraken({
             'apiKey': api_key,
             'secret': secret_key,
@@ -38,36 +66,12 @@ class RSITrader:
 
         self.kraken_symbol = self._get_kraken_symbol(crypto_symbol)
         self.display_symbol = crypto_symbol
-
-        # Trading parameters
-        self.rsi_period = 3
-        self.rsi_low = 25
-        self.rsi_high = 85
-        self.interval = '5m'
         self.trades = []
         self.log_file = 'rsi_trading-kraken.log'
-
-        self.maker_fee = 0.0016
-        self.taker_fee = 0.0026
-        self.price_adjustment = 0.004
-
-        self.min_usdt_trade = 5.0
-        self.min_crypto_trade = 15
-        self.position_percentage = 97
-
-        # Profit settings
-        self.min_usdt_profit_target_per_trade = 0.02
-        self.max_usdt_loss_percent = 90.0
-        self.initial_usdt_only_balance = 0.0
-
-        # Trading control
         self.trading_enabled = True
+        self.active_orders = {}
 
-        # Order timeout settings (NEW)
-        self.order_timeout_minutes = 30
-        self.active_orders = {}  # Track active orders: {order_id: {'time': datetime, 'side': 'buy/sell'}}
-
-        # Paper trading balances
+        # Paper trading balances (only used when paper_trading=True)
         self.current_usdt_balance = 50.0
         self.current_crypto_balance = 61.18663155
         self.total_fees_paid = 0.0
@@ -75,15 +79,11 @@ class RSITrader:
         self.update_balances()
         self.initial_usdt_balance = self.current_usdt_balance
         self.initial_crypto_balance = self.current_crypto_balance
-
-        if self.initial_usdt_only_balance == 0.0 and self.current_usdt_balance > 0.0:
-            self.initial_usdt_only_balance = self.current_usdt_balance
-            logging.info(f"Initial USDT balance set: {self.initial_usdt_only_balance:.2f}")
+        self.initial_usdt_only_balance = self.current_usdt_balance if self.current_usdt_balance > 0.0 else 0.0
 
         self.prices = []
         self.rsis = []
         self.timestamps = []
-        self.open_positions = []
         self.max_data_points = 100
 
         self.load_previous_trades()
@@ -96,17 +96,15 @@ class RSITrader:
     def check_and_cancel_stale_orders(self):
         """Check for and cancel orders that have been open too long"""
         if self.paper_trading:
-            return  # No orders to cancel in paper trading mode
+            return
 
         current_time = datetime.now()
         orders_to_cancel = []
 
-        # Check which orders have timed out
         for order_id, order_info in list(self.active_orders.items()):
             if (current_time - order_info['time']) > timedelta(minutes=self.order_timeout_minutes):
                 orders_to_cancel.append(order_id)
 
-        # Cancel the stale orders
         for order_id in orders_to_cancel:
             try:
                 self.exchange.cancel_order(order_id, self.kraken_symbol)
@@ -114,7 +112,6 @@ class RSITrader:
                 del self.active_orders[order_id]
             except Exception as e:
                 logging.error(f"Failed to cancel order {order_id}: {e}")
-                # If we can't cancel it, we'll check again next cycle
 
     @staticmethod
     def _get_kraken_symbol(symbol):
@@ -133,7 +130,7 @@ class RSITrader:
             'BTC': 'XBT',
             'ETH': 'ETH',
             'USDT': 'USDT',
-            'SOL': 'SOL',  # - Added SOL to match the symbol mapping if needed
+            'SOL': 'SOL',
         }
         return kraken_codes.get(symbol.upper(), symbol.upper())
 
@@ -229,7 +226,6 @@ class RSITrader:
                 self.current_crypto_balance = float(free.get(self._get_kraken_balance_code(self.display_symbol), 0))
                 self.current_usdt_balance = float(free.get('USDT', 0))
 
-            # Also check for any filled orders and remove them from active_orders
             for order_id in list(self.active_orders.keys()):
                 try:
                     order = self.exchange.fetch_order(order_id, self.kraken_symbol)
@@ -252,7 +248,6 @@ class RSITrader:
             return False
 
         order_executed = False
-        # trade_details = "" # Removed this line as its value was not used.
 
         if side == 'buy':
             usdt_to_spend_potential = amount_to_use * (self.position_percentage / 100)
@@ -261,7 +256,6 @@ class RSITrader:
                     f"Attempted buy: USDT to spend {usdt_to_spend_potential:.2f} is below minimum {self.min_usdt_trade:.2f} USDT. Skipping trade.")
                 return False
 
-            # Ensure we don't try to spend more USDT than we have (for real trading)
             usdt_to_spend = min(usdt_to_spend_potential,
                                 self.current_usdt_balance) if not self.paper_trading else usdt_to_spend_potential
             if usdt_to_spend < self.min_usdt_trade:
@@ -270,12 +264,11 @@ class RSITrader:
                 return False
 
             target_price = current_price * (1 - self.price_adjustment)
-            quantity = usdt_to_spend / target_price  # Crypto quantity to buy
+            quantity = usdt_to_spend / target_price
 
             if self.paper_trading:
                 fee = usdt_to_spend * self.taker_fee
                 self.current_usdt_balance -= usdt_to_spend
-                # Paper crypto balance update was missing the fee deduction from quantity, let's assume fee is paid in USDT
                 self.current_crypto_balance += quantity
                 self.total_fees_paid += fee
                 self.trades.append((pd.Timestamp.now(), target_price, 'buy'))
@@ -283,7 +276,6 @@ class RSITrader:
                     f"PAPER BUY: {quantity:.8f} {self.display_symbol} at {target_price:.5f} for {usdt_to_spend:.2f} USDT")
                 order_executed = True
             else:
-                # REAL BUY
                 logging.info(
                     f"Attempting REAL BUY: {quantity:.8f} {self.display_symbol} at limit price {target_price:.5f}")
                 try:
@@ -296,23 +288,13 @@ class RSITrader:
                     )
                     order_id = order.get('id')
                     if order_id:
-                        self.active_orders[order_id] = {
-                            'time': datetime.now(),
-                            'side': 'buy'
-                        }
+                        self.active_orders[order_id] = {'time': datetime.now(), 'side': 'buy'}
                         logging.info(
                             f"REAL BUY order placed: ID {order_id}, Quantity: {quantity:.8f} {self.display_symbol}, Price: {target_price:.5f}")
-                    self.trades.append((pd.Timestamp.now(), target_price,
-                                        'buy'))  # Log attempt, actual fill price might vary or not fill
+                    self.trades.append((pd.Timestamp.now(), target_price, 'buy'))
                     order_executed = True
-                except ccxt.InsufficientFunds as e:
-                    logging.error(f"REAL BUY FAILED (Insufficient Funds): {e}")
-                except ccxt.NetworkError as e:
-                    logging.error(f"REAL BUY FAILED (Network Error): {e}")
-                except ccxt.ExchangeError as e:
-                    logging.error(f"REAL BUY FAILED (Exchange Error): {e}")
                 except Exception as e:
-                    logging.error(f"REAL BUY FAILED (Unexpected Error): {e}")
+                    logging.error(f"REAL BUY FAILED: {e}")
 
         elif side == 'sell':
             crypto_to_sell_potential = amount_to_use * (self.position_percentage / 100)
@@ -321,7 +303,6 @@ class RSITrader:
                     f"Attempted sell: Crypto to sell {crypto_to_sell_potential:.8f} is below minimum {self.min_crypto_trade:.8f}. Skipping trade.")
                 return False
 
-            # Ensure we don't try to sell more crypto than we have
             quantity_to_sell = min(crypto_to_sell_potential,
                                    self.current_crypto_balance) if not self.paper_trading else crypto_to_sell_potential
             if quantity_to_sell < self.min_crypto_trade:
@@ -332,7 +313,6 @@ class RSITrader:
             target_price = current_price * (1 + self.price_adjustment)
             usdt_expected = quantity_to_sell * target_price
 
-            # --- NEW LOGIC: Check last buy price before selling ---
             last_buy_price = None
             for i in reversed(range(len(self.trades))):
                 if self.trades[i][2] == 'buy':
@@ -340,19 +320,11 @@ class RSITrader:
                     break
 
             if last_buy_price is not None:
-                # Add a small buffer to account for fees/slippage when checking for profit
-                # For example, ensure target_price is at least last_buy_price + (2 * taker_fee * last_buy_price)
-                # Or just a simple percentage buffer
-                profit_buffer = last_buy_price * (1 + self.taker_fee * 2)  # Example: cover round-trip fees
-
+                profit_buffer = last_buy_price * (1 + self.taker_fee * 2)
                 if target_price <= profit_buffer:
                     logging.info(
-                        f"SELL SIGNAL: Current sell target price ({target_price:.5f}) "
-                        f"is not sufficiently higher than last buy price ({last_buy_price:.5f}). "
-                        f"Skipping sell to avoid immediate loss or insufficient profit."
-                    )
+                        f"SELL SIGNAL: Current sell target price ({target_price:.5f}) is not sufficiently higher than last buy price ({last_buy_price:.5f}). Skipping sell.")
                     return False
-            # --- END NEW LOGIC ---
 
             if self.paper_trading:
                 fee = usdt_expected * self.taker_fee
@@ -365,7 +337,6 @@ class RSITrader:
                     f"PAPER SELL: {quantity_to_sell:.8f} {self.display_symbol} at {target_price:.5f} for {usdt_received:.2f} USDT")
                 order_executed = True
             else:
-                # REAL SELL
                 logging.info(
                     f"Attempting REAL SELL: {quantity_to_sell:.8f} {self.display_symbol} at limit price {target_price:.5f}")
                 try:
@@ -378,22 +349,13 @@ class RSITrader:
                     )
                     order_id = order.get('id')
                     if order_id:
-                        self.active_orders[order_id] = {
-                            'time': datetime.now(),
-                            'side': 'sell'
-                        }
+                        self.active_orders[order_id] = {'time': datetime.now(), 'side': 'sell'}
                         logging.info(
                             f"REAL SELL order placed: ID {order_id}, Quantity: {quantity_to_sell:.8f} {self.display_symbol}, Price: {target_price:.5f}")
-                    self.trades.append((pd.Timestamp.now(), target_price, 'sell'))  # Log attempt
+                    self.trades.append((pd.Timestamp.now(), target_price, 'sell'))
                     order_executed = True
-                except ccxt.InsufficientFunds as e:
-                    logging.error(f"REAL SELL FAILED (Insufficient Funds): {e}")
-                except ccxt.NetworkError as e:
-                    logging.error(f"REAL SELL FAILED (Network Error): {e}")
-                except ccxt.ExchangeError as e:
-                    logging.error(f"REAL SELL FAILED (Exchange Error): {e}")
                 except Exception as e:
-                    logging.error(f"REAL SELL FAILED (Unexpected Error): {e}")
+                    logging.error(f"REAL SELL FAILED: {e}")
 
         return order_executed
 
@@ -401,7 +363,7 @@ class RSITrader:
         while True:
             try:
                 self.update_balances()
-                self.check_and_cancel_stale_orders()  # NEW: Check for stale orders each cycle
+                self.check_and_cancel_stale_orders()
                 price = self.fetch_current_price()
                 rsi = self.calculate_rsi()
 
@@ -410,7 +372,6 @@ class RSITrader:
                     self.rsis.append(rsi)
                     self.timestamps.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-                    # Trim old data
                     self.prices = self.prices[-self.max_data_points:]
                     self.rsis = self.rsis[-self.max_data_points:]
                     self.timestamps = self.timestamps[-self.max_data_points:]
@@ -438,16 +399,12 @@ class RSITrader:
 app = Flask(__name__)
 app.static_folder = 'static'
 
-trader = RSITrader('API_KRAKEN_KEY_HERE', 'API_KRAKEN_SECRET_HERE', 'DOGE', paper_trading=False)
+trader = RSITrader('YOUR_API_KEY', 'YOUR_SECRET', 'DOGE', paper_trading=True)
 
 
 @app.route('/')
 def dashboard():
     pnl_usdt, pnl_percent = trader.calculate_pnl()
-
-    # THESE DEBUG LINES MUST BE PRESENT
-    logging.info(f"DEBUG: In dashboard route - pnl_usdt type: {type(pnl_usdt)}, value: {pnl_usdt}")
-    logging.info(f"DEBUG: In dashboard route - pnl_percent type: {type(pnl_percent)}, value: {pnl_percent}")
 
     formatted_trades = []
     for trade_info in trader.trades[-10:]:
