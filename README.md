@@ -22,6 +22,8 @@ A straightforward Python-based RSI (Relative Strength Index) trading bot designe
 
 **7.** **Profit Protection: Includes logic to ensure sell orders are placed at a price sufficiently higher than the last buy to cover fees and ensure profit (i typically trade with 95 to 90%% of funds to cover costs).**
 
+Point 7 was the main part i wanted as a safety net.
+
 # Installation
 
 To get started with the bot, follow these steps:
@@ -87,6 +89,7 @@ Trading Parameters: Adjust trading parameters within the RSITrader class in SSRs
     self.min_usdt_profit_target_per_trade
     self.max_usdt_loss_percent
     self.order_timeout_minutes
+ (15 min trade delay for DOGE/USDT movement works best, and try not to go below 5 minutes for BTC/USDT or it might hammer the api, you can run at 60 second delay but it will hammer... set for 61 seconds)
 
 # Running the Bot
 
@@ -103,6 +106,8 @@ There might be times where you will have to "intervene" and post a recovery trad
 # Logging
 
 The bot logs its activities, including trades, balance updates, and errors, to rsi_trading-kraken.log. You can also monitor the console output for real-time updates. Important Notes Risk Warning: Automated trading carries significant risks. Past performance is not indicative of future results. Use this bot at your own risk and only with funds you can afford to lose. API Key Security: Never share your API keys. Store them securely and restrict their permissions on Kraken. Network Stability: Ensure a stable internet connection for uninterrupted operation. Error Handling: The bot includes basic error handling, but it's crucial to monitor its performance regularly. Customization: This bot is a starting point. Feel free to modify and enhance it to fit your specific trading needs and strategies.
+
+To start a CLEAN trading session, just delete the logs and restart. It'll begin logging previous trades.
 
 # Contributing
 
