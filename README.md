@@ -103,6 +103,16 @@ The bot will start, and a web dashboard will be accessible at http://localhost:5
 There might be times where you will have to "intervene" and post a recovery trade, shouldn't happen but if it does.... Just Intervene!
 <img width="1315" height="633" alt="Screenshot from 2025-07-13 21-04-21" src="https://github.com/user-attachments/assets/40e73d68-4001-45de-9d80-1815a93c89b6" />
 
+Then after 'intervening'
+<img width="1320" height="630" alt="Screenshot from 2025-07-14 11-43-10" src="https://github.com/user-attachments/assets/73e97a15-a79d-4a85-8cff-ee2c5e091e36" />
+
+But, looking at the script issuing its own BUY at 0.20419 USDT (which is fine)... after i posted a correction SELL just before, just means it will see the profit from anything after (like it did) and work from there with 'profit' being its main goal. 
+
+Also there might be a BullTrap coming up in the chart, which this script will not see, unlike the Ai trained model will ironically, because programming BullTrap detection has been a PITA on any script. But timing past a bulltrap is better that's why this script usually doesn't care about the trap because of the 15 or even 5 minute polling of the market and just skips past it... either way it will still work towards a 'profit' (IE. dont touch it), unless i or you stop the script and delete the log file and restart it, then all the previous trade data will be lost and start a new and, well, profit loss could happen. 
+
+(a game of patience)
+
+Sooo run paper first, see how it works, then trade with minimal amounts of DOGE or (god forbid) BTC to USDT in a controlled exchange environment and see what happens :)
 
 # Logging
 
