@@ -114,6 +114,23 @@ Also there might be a BullTrap coming up in the chart, which this script will no
 
 Sooo run paper first, see how it works, then trade with minimal amounts of DOGE or (god forbid) BTC to USDT in a controlled exchange environment and see what happens :)
 
+I crontab everything, this is my crontab entry to run on my RPI3
+
+	#### Daytrading RSI Method ####
+	#### (delete logfile) ####
+	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /media/usb-stick/super-simple-rsi/rsi_trading-kraken.log; cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Kraken.py"
+	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /media/usb-stick/super-simple-rsi/rsi_trading-coinbase.log; cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Coinbase.py"
+
+
+	#### (dont delete logfile) ####
+	##kraken##
+	@reboot /usr/bin/screen -dmS DayTrader bash -c "cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Kraken.py"
+	##coinbase##
+	@reboot /usr/bin/sleep 300; /usr/bin/screen -dmS DayTrader bash -c "cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Coinbase.py"
+	###############################
+
+Works fine on rebooting just uncomment and recomment what you need the script to do with the log. Uncomment the delete log function to let the bot build a trade history in paper, then change to not delete log file for headless running.
+
 # Logging
 
 The bot logs its activities, including trades, balance updates, and errors, to rsi_trading-kraken.log. You can also monitor the console output for real-time updates. Important Notes Risk Warning: Automated trading carries significant risks. Past performance is not indicative of future results. Use this bot at your own risk and only with funds you can afford to lose. API Key Security: Never share your API keys. Store them securely and restrict their permissions on Kraken. Network Stability: Ensure a stable internet connection for uninterrupted operation. Error Handling: The bot includes basic error handling, but it's crucial to monitor its performance regularly. Customization: This bot is a starting point. Feel free to modify and enhance it to fit your specific trading needs and strategies.
