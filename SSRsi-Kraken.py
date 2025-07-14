@@ -30,8 +30,8 @@ logging.getLogger().addFilter(NoRecursiveWarningsFilter())
 class RSITrader:
     def __init__(self, api_key, secret_key, crypto_symbol='DOGE', paper_trading=False):
         # ********** USER CONFIGURATION SECTION **********
-        self.paper_trading = paper_trading  # Set to True for testing, False for real trading
-        self.crypto_symbol = crypto_symbol  # Trading pair symbol (e.g., 'DOGE', 'BTC', 'ETH')
+        self.paper_trading = paper_trading  # Set to True for testing, False for real trading, see down at the bottom of the script
+        self.crypto_symbol = crypto_symbol  # Trading pair symbol (e.g., 'DOGE', 'BTC', 'ETH'), see down at the bottom of the script
 
         # RSI Parameters
         self.rsi_period = 3  # Period for RSI calculation
