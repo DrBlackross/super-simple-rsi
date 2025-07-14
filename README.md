@@ -3,6 +3,9 @@ this should work on a RPI4/3, goal was a RPI zero w 2 for solar setup)
 
 # Super Simple RSI Trading Bot for Kraken
 
+<img width="1920" height="966" alt="image" src="https://github.com/user-attachments/assets/af518d09-044a-48d6-81bd-83a52d1550c8" />
+(example screenshot)
+
 A straightforward Python-based RSI (Relative Strength Index) trading bot designed for the Kraken exchange. This bot features a web-based dashboard for monitoring and basic controls, and supports both live and paper trading. Features
 
 **1.** **RSI-based Trading: Automatically buys when RSI is low and sells when RSI is high.**
