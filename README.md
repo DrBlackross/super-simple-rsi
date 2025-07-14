@@ -1,4 +1,4 @@
-(these two scripts work pretty much like Gekko did for me, this should work on a RPI4/3)
+(these two scripts work pretty much like Gekko did for me, this should work on a RPI4/3, goal was a RPI zero w 2 for solar setup)
 
 # Super Simple RSI Trading Bot for Kraken
 
