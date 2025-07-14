@@ -22,7 +22,7 @@ A straightforward Python-based RSI (Relative Strength Index) trading bot designe
 
 **7.** **Profit Protection: Includes logic to ensure sell orders are placed at a price sufficiently higher than the last buy to cover fees and ensure profit (i typically trade with 95 to 90%% of funds to cover costs).**
 
-Point 7 was the main part i wanted as a safety net.
+Point 7 was the main part I wanted as a safety net.
 
 # Installation
 
@@ -104,13 +104,20 @@ There might be times where you will have to "intervene" and post a recovery trad
 <img width="1315" height="633" alt="Screenshot from 2025-07-13 21-04-21" src="https://github.com/user-attachments/assets/40e73d68-4001-45de-9d80-1815a93c89b6" />
 
 Then after 'intervening'
+
 <img width="1320" height="630" alt="Screenshot from 2025-07-14 11-43-10" src="https://github.com/user-attachments/assets/73e97a15-a79d-4a85-8cff-ee2c5e091e36" />
 
-But, looking at the script issuing its own BUY at 0.20419 USDT (which is fine)... after i posted a correction SELL just before, just means it will see the profit from anything after (like it did) and work from there with 'profit' being its main goal. 
+But, looking at the script issuing its own BUY at 0.20419 USDT (which is fine)... after I posted a correction SELL just before, just means it will see the profit from anything after (like it did) and work from there with 'profit' being its main goal. 
 
-Also there might be a BullTrap coming up in the chart, which this script will not see, unlike the Ai trained model will ironically, because programming BullTrap detection has been a PITA on any script. But timing past a bulltrap is better that's why this script usually doesn't care about the trap because of the 15 or even 5 minute polling of the market and just skips past it... either way it will still work towards a 'profit' (IE. dont touch it), unless i or you stop the script and delete the log file and restart it, then all the previous trade data will be lost and it will start a new and, well, profit loss could happen. 
+Also there might be a BullTrap coming up in the chart, which this script will not see, unlike the Ai trained model will ironically, because programming BullTrap detection has been a PITA on any script. But timing past a bulltrap is better that's why this script usually doesn't care about the trap because of the 15 or even 5 minute polling of the market and just skips past it... either way it will still work towards a 'profit' (IE. dont touch it), unless I or you stop the script and delete the log file and restart it, then all the previous trade data will be lost and it will start a new and, well, profit loss could happen. 
 
 (a game of patience)
+
+Also...
+
+<img width="1320" height="630" alt="image" src="https://github.com/user-attachments/assets/a2eb3224-dfcd-4baf-847b-f996aeef4eba" />
+
+DOGE might never see $0.21014 for a while, but you can force a manual BUY at $0.198 (in kraken)... here's the cool part, if your manual BUY does hit at 0.198 the BUY will be logged and it is now the lowest starting point for the bot to make profit onward (part of that intervention idea using a 'forced balance correction' trick). This only works in REAL trading mode not paper, I just used paper to test and build a trade log to start with.
 
 Sooo run paper first, see how it works, then trade with minimal amounts of DOGE or (god forbid) BTC to USDT in a controlled exchange environment and see what happens :)
 
@@ -130,6 +137,25 @@ I crontab everything, this is my crontab entry to run on my RPI3
 	###############################
 
 Works fine on rebooting just uncomment and recomment what you need the script to do with the log. Uncomment the delete log function to let the bot build a trade history in paper, then change to not delete log file for headless running.
+
+As far as real world trading.... 
+Kraken started with 50 DOGE 
+(this was my control account)
+
+PNL (USDT)
+$17.282341273195 (3482.509345118808%)
+
+<img width="858" height="561" alt="image" src="https://github.com/user-attachments/assets/be198ebe-6862-4192-9552-5b0646d5e199" />
+
+Coinbase started with whatever I had avaiable after sending 50 to Kraken
+(this was my experimental)
+
+PNL (USDT)
+$12.995733388645 (3698.3998852109353%)
+
+<img width="858" height="561" alt="image" src="https://github.com/user-attachments/assets/738badd6-aca3-47a9-8bac-04d83306f66e" />
+
+Kraken account will always have the initial starting amount, any growth in profit after HAS to be from profit made from trading, the Coinbase account does receive DOGE from a pair of antminers I rent out on MRR once in a while or from zergpool, so it will swing wildly around with DOGE balances.
 
 # Logging
 
