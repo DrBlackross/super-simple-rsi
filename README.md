@@ -77,19 +77,33 @@ Paper Trading: To enable paper trading, change paper_trading=False to paper_trad
 
 Trading Parameters: Adjust trading parameters within the RSITrader class in SSRsi-Kraken.py to suit your strategy (check by adding the 'indicators' on the kraken market chart):
 
-    self.rsi_period
-    self.rsi_low
-    self.rsi_high
-    self.interval
-    self.maker_fee
-    self.taker_fee
-    self.price_adjustment
-    self.min_usdt_trade
-    self.min_crypto_trade
-    self.position_percentage
-    self.min_usdt_profit_target_per_trade
-    self.max_usdt_loss_percent
-    self.order_timeout_minutes
+        self.paper_trading = paper_trading  # Set to True for testing, False for real trading, see down at the bottom of the script
+        self.crypto_symbol = crypto_symbol  # Trading pair symbol (e.g., 'DOGE', 'BTC', 'ETH'), see down at the bottom of the script
+
+        # RSI Parameters
+        self.rsi_period = 3  # Period for RSI calculation
+        self.rsi_low = 25  # Buy when RSI below this value
+        self.rsi_high = 85  # Sell when RSI above this value
+        self.interval = '5m'  # Timeframe for OHLCV data
+
+        # Trade Parameters
+        self.position_percentage = 97  # Percentage of balance to use per trade
+        self.price_adjustment = 0.004  # Price adjustment for limit orders (0.4% for doge or higher 0.05 (5%) for BTC) EX. target_price = current_price * (1 - 0.05) = current_price * 0.95
+
+        # Minimum trade amounts
+        self.min_usdt_trade = 5.0  # Minimum USDT amount per trade
+        self.min_crypto_trade = 15  # Minimum crypto amount per trade
+
+        # Risk Management
+        self.max_usdt_loss_percent = 90.0  # Max allowed loss percentage before stopping
+
+        # Exchange Fees (Kraken)
+        self.maker_fee = 0.0016  # 0.16%
+        self.taker_fee = 0.0026  # 0.26%
+
+        # Order Management
+        self.order_timeout_minutes = 30  # Cancel orders older than this
+	
  (15 min trade delay for DOGE/USDT movement works best, and try not to go below 5 minutes for BTC/USDT or it might hammer the api, you can run at 60 second delay but it will hammer... set for 61 seconds)
 
 # Running the Bot
