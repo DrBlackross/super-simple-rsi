@@ -169,7 +169,7 @@ $12.995733388645 (3698.3998852109353%)
 
 <img width="858" height="561" alt="image" src="https://github.com/user-attachments/assets/738badd6-aca3-47a9-8bac-04d83306f66e" />
 
-Kraken account will always have the initial starting amount, any growth in profit after HAS to be from profit made from trading, the Coinbase account does receive DOGE from a pair of antminers I rent out on MRR once in a while or from zergpool, so it will swing wildly around with DOGE balances.
+Kraken account will always have the initial starting amount, any growth in profit after HAS to be from profit made from trading, the Coinbase account receives DOGE from a pair of antminers I rent out on MRR once in a while or from zergpool when not rented, so it will swing wildly around with DOGE balances.
 
 # Logging
 
