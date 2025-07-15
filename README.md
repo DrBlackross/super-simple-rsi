@@ -88,7 +88,8 @@ Trading Parameters: Adjust trading parameters within the RSITrader class in SSRs
 
         # Trade Parameters
         self.position_percentage = 97  # Percentage of balance to use per trade
-        self.price_adjustment = 0.004  # Price adjustment for limit orders (0.4% for doge or higher 0.05 (5%) for BTC) EX. target_price = current_price * (1 - 0.05) = current_price * 0.95
+        self.price_adjustment = 0.004  # Price adjustment for limit orders (0.4% for doge or higher 0.05 (5%) for BTC)
+		# EX. target_price = current_price * (1 - 0.05) = current_price * 0.95
 
         # Minimum trade amounts
         self.min_usdt_trade = 5.0  # Minimum USDT amount per trade
