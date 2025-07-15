@@ -140,15 +140,15 @@ I crontab everything, this is my crontab entry to run on my RPI3
 
 	#### Daytrading RSI Method ####
 	#### (delete logfile) ####
-	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /media/usb-stick/super-simple-rsi/rsi_trading-kraken.log; cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Kraken.py"
-	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /media/usb-stick/super-simple-rsi/rsi_trading-coinbase.log; cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Coinbase.py"
+	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /Location/Of_script_folder/super-simple-rsi/rsi_trading-kraken.log; cd /Location/Of_script_folder/super-simple-rsi/; source .venv/bin/activate; python /Location/Of_script_folder/super-simple-rsi/SSRsi-Kraken.py"
+	# @reboot /usr/bin/screen -dmS DayTrader bash -c "rm /Location/Of_script_folder/super-simple-rsi/rsi_trading-coinbase.log; cd /Location/Of_script_folder/super-simple-rsi/; source .venv/bin/activate; python /Location/Of_script_folder/super-simple-rsi/SSRsi-Coinbase.py"
 
 
 	#### (dont delete logfile) ####
 	##kraken##
-	@reboot /usr/bin/screen -dmS DayTrader bash -c "cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Kraken.py"
+	@reboot /usr/bin/screen -dmS DayTrader bash -c "cd /Location/Of_script_folder/super-simple-rsi/; source .venv/bin/activate; python /Location/Of_script_folder/super-simple-rsi/SSRsi-Kraken.py"
 	##coinbase##
-	@reboot /usr/bin/sleep 300; /usr/bin/screen -dmS DayTrader bash -c "cd /media/usb-stick/super-simple-rsi/; source .venv/bin/activate; python /media/usb-stick/super-simple-rsi/SSRsi-Coinbase.py"
+	@reboot /usr/bin/sleep 300; /usr/bin/screen -dmS DayTrader bash -c "cd /Location/Of_script_folder/super-simple-rsi/; source .venv/bin/activate; python /Location/Of_script_folder/super-simple-rsi/SSRsi-Coinbase.py"
 	###############################
 
 Works fine on rebooting just uncomment and recomment what you need the script to do with the log. Uncomment the delete log function to let the bot build a trade history in paper, then change to not delete log file for headless running.
